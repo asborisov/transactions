@@ -52,8 +52,8 @@ const create = db => new Promise((resolve, reject) => {
 });
 
 const addUser = (db, { name, displayName }) => insertBase(db, "main.Users", {name, displayName: (displayName || name)});
-const addAccount = (db, { name, currency }) => insertBase(db, "main.Accounts", {name, currency});
-const addCategory = (db, { name }) => insertBase(db, "main.Categories", { name });
+const addAccount = (db, { name, currencyCode }) => insertBase(db, "main.Accounts", {name, currencyCode});
+const addCategory = (db, { name }) => insertBase(db, "main.Categories", { name, isActive: true });
 const addTransaction = (db, { userId, accountId, categoryId, amount, comment, date }) =>
     insertBase(db, "main.transactions", { userId, accountId, categoryId, amount, comment, date });
 
