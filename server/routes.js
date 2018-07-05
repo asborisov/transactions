@@ -17,7 +17,7 @@ const createUser = (dbInstance, request, response) => {
         });
 };
 const createAccount = (dbInstance, request, response) => {
-    const { name, currencyCode } = request.query;
+    const { name, currencyCode } = request.params;
     db.add
         .account(dbInstance, { name, currencyCode })
         .then(accountId => {
@@ -28,7 +28,7 @@ const createAccount = (dbInstance, request, response) => {
         });
 };
 const createCategory = (dbInstance, request, response) => {
-    const { name } = request.query;
+    const { name } = request.params;
     db.add
         .category(dbInstance, { name })
         .then(categoryId => {
@@ -40,7 +40,7 @@ const createCategory = (dbInstance, request, response) => {
 };
 const createTransaction = (dbInstance, request, response) => {
     // `ts` is unix timestamp
-    const { userId, accountId, categoryId, amount, comment, ts } = request.query;
+    const { userId, accountId, categoryId, amount, comment, ts } = request.params;
     const amountNumber = parseFloat(amount);
     const date = new Date(ts*1000);
     db.add
@@ -53,11 +53,62 @@ const createTransaction = (dbInstance, request, response) => {
         });
 };
 
+const getUsers = (dbInstance, request, response) => {
+    const { userId } = request.params;
+    db.get
+        .users(dbInstance, {userId})
+        .then(results => {
+            response.send(results.map(user => JSON.stringify(user, "", 2)));
+        })
+        .catch(err => {
+            response.send(`Error: ${err}`);
+        });
+};
+const getAccounts = (dbInstance, request, response) => {
+    const { accountId, currencyCode } = request.params;
+    db.get
+        .accounts(dbInstance, { accountId, currencyCode })
+        .then(results => {
+            response.send(results.map(user => JSON.stringify(user, "", 2)));
+        })
+        .catch(err => {
+            response.send(`Error: ${err}`);
+        });
+};
+const getCategories = (dbInstance, request, response) => {
+    const { categoryId, isActive } = request.params;
+    db.get
+        .categories(dbInstance, { categoryId, isActive })
+        .then(results => {
+            response.send(results.map(user => JSON.stringify(user, "", 2)));
+        })
+        .catch(err => {
+            response.send(`Error: ${err}`);
+        });
+};
+const getTransactions = (dbInstance, request, response) => {
+    const { transactionId, categoryId, accountId, userId } = request.params;
+    db.get
+        .transactions(dbInstance, { transactionId, categoryId, accountId, userId })
+        .then(results => {
+            response.send(results.map(user => JSON.stringify(user, "", 2)));
+        })
+        .catch(err => {
+            response.send(`Error: ${err}`);
+        });
+}
+
 const map = new Map([
-    [{path: "/createUser", method: methods.GET}, createUser],
-    [{path: "/createAccount", method: methods.GET}, createAccount],
-    [{path: "/createCategory", method: methods.GET}, createCategory],
-    [{path: "/createTransaction", method: methods.GET}, createTransaction],
+    [{path: "/users", method: methods.POST}, createUser],
+    [{path: "/accounts", method: methods.POST}, createAccount],
+    [{path: "/categories", method: methods.POST}, createCategory],
+    [{path: "/transactions", method: methods.POST}, createTransaction],
+
+    [{path: "/users", method: methods.GET}, getUsers],
+    [{path: "/accounts", method: methods.GET}, getAccounts],
+    [{path: "/categories", method: methods.GET}, getCategories],
+    [{path: "/transactions", method: methods.GET}, getTransactions],
+
     [{path: "/", method: methods.GET}, (db, request, response) => {
         response.send('Hello');
     }]
