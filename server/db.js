@@ -49,6 +49,14 @@ const selectBase = (db, tableName, fields = [], conditions = {}) => new Promise(
         else reject(err);
     });
 });
+const selectBase = (db, tableName, fields = [], conditions = {}) => new Promise((resolve, reject) => {
+    const whereClause = joinWhereAndFields(conditions);
+    const query = `SELECT ${fields.join(", ") || "*"} FROM ${tableName}${whereClause ? ` WHERE ${whereClause}` : ""}`;
+    db.all(query, conditions, (err, rows) => {
+        if (!err) resolve(rows);
+        else reject(err);
+    });
+});
 
 const create = db => new Promise((resolve, reject) => {
     const cb = err => {
@@ -84,6 +92,7 @@ const updateAccount = (db, { accountId, name, currency }) =>
 
 const getUsers = (db, { userId, name, displayName }) => 
     selectBase(db, "main.Users", ["id", "name", "displayName"], { id: userId, name, displayName });
+
 const getAccounts = (db, { accountId, currencyCode } = {}) => 
     selectBase(db, "main.Accounts", ["id", "name", "currencyCode"],  { id: accountId, currencyCode });
 const getCategories = (db, { categoryId, isActive } = {}) => {
