@@ -54,7 +54,7 @@ const createTransaction = (dbInstance, request, response) => {
 };
 
 const getUsers = (dbInstance, request, response) => {
-    const { userId } = request.params;
+    const { userId } = request.query;
     db.get
         .users(dbInstance, {userId})
         .then(results => {
@@ -65,7 +65,7 @@ const getUsers = (dbInstance, request, response) => {
         });
 };
 const getAccounts = (dbInstance, request, response) => {
-    const { accountId, currencyCode } = request.params;
+    const { accountId, currencyCode } = request.query;
     db.get
         .accounts(dbInstance, { accountId, currencyCode })
         .then(results => {
@@ -76,7 +76,7 @@ const getAccounts = (dbInstance, request, response) => {
         });
 };
 const getCategories = (dbInstance, request, response) => {
-    const { categoryId, isActive } = request.params;
+    const { categoryId, isActive } = request.query;
     db.get
         .categories(dbInstance, { categoryId, isActive })
         .then(results => {
@@ -87,7 +87,7 @@ const getCategories = (dbInstance, request, response) => {
         });
 };
 const getTransactions = (dbInstance, request, response) => {
-    const { transactionId, categoryId, accountId, userId } = request.params;
+    const { transactionId, categoryId, accountId, userId } = request.query;
     db.get
         .transactions(dbInstance, { transactionId, categoryId, accountId, userId })
         .then(results => {
