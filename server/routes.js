@@ -77,52 +77,6 @@ const getTransactions = (dbInstance, request, response) => {
         .transactions(dbInstance, { transactionId, categoryId, accountId, userId })
         .then(sendResult(response))
         .catch(sendError(response));
-};
-
-const getUsers = (dbInstance, request, response) => {
-    const { userId } = request.query;
-    db.get
-        .users(dbInstance, {userId})
-        .then(results => {
-            response.send(results.map(user => JSON.stringify(user, "", 2)));
-        })
-        .catch(err => {
-            response.send(`Error: ${err}`);
-        });
-};
-const getAccounts = (dbInstance, request, response) => {
-    const { accountId, currencyCode } = request.query;
-    db.get
-        .accounts(dbInstance, { accountId, currencyCode })
-        .then(results => {
-            response.send(results.map(user => JSON.stringify(user, "", 2)));
-        })
-        .catch(err => {
-            response.send(`Error: ${err}`);
-        });
-};
-const getCategories = (dbInstance, request, response) => {
-    const { categoryId, isActive } = request.query;
-    db.get
-        .categories(dbInstance, { categoryId, isActive })
-        .then(results => {
-            response.send(results.map(user => JSON.stringify(user, "", 2)));
-        })
-        .catch(err => {
-            response.send(`Error: ${err}`);
-        });
-};
-const getTransactions = (dbInstance, request, response) => {
-    const { transactionId, categoryId, accountId, userId } = request.query;
-    db.get
-        .transactions(dbInstance, { transactionId, categoryId, accountId, userId })
-        .then(results => {
-            response.send(results.map(user => JSON.stringify(user, "", 2)));
-        })
-        .catch(err => {
-            response.send(`Error: ${err}`);
-        });
-}
 
 const map = new Map([
     [{path: "/users", method: methods.POST}, createUser],
