@@ -21,8 +21,10 @@ const updateByIdBase = (db, tableName, id, values) => new Promise((resolve, reje
     const updateQuery = `UPDATE ${tableName} SET ${joinUpdateFields(updateArgs)} WHERE id = $id`;
 
     db.run(updateQuery, Object.assign({ $id: id }, castObjectToQueryArgs(updateArgs)), (err) => {
-        if (!err) resolve(id);
-        else reject(err);
+        if (err) return reject(err);
+        selectBase(db, tableName, [], { id }).then(rows => {
+            resolve(rows[0]);
+        });
     });
 });
 const insertBase = (db, tableName, values) => new Promise((resolve, reject) => {
@@ -30,15 +32,19 @@ const insertBase = (db, tableName, values) => new Promise((resolve, reject) => {
     if (!hasNonEmptyInObject(values)) return reject("Nothing to insert");
     const query = `INSERT INTO ${tableName} (id, ${Object.keys(values).join(", ")}) VALUES ($id, ${joinInsertFields(values)})`;
 
-    db.run(query, castObjectToQueryArgs(Object.assign({id}, values)), err => {
-        if (!err) resolve(id);
-        else reject(err);
+    db.run(query, castObjectToQueryArgs(Object.assign({ id }, values)), err => {
+        if (err) return reject(err);
+        selectBase(db, tableName, [], { id }).then(rows => {
+            resolve(rows[0]);
+        });
     });
 });
 const selectBase = (db, tableName, fields = [], conditions = {}) => new Promise((resolve, reject) => {
-    const whereClause = joinWhereAndFields(conditions);
+    const pureConditions = removeEmptyParams(conditions);
+    const whereClause = joinWhereAndFields(pureConditions);
     const query = `SELECT ${fields.join(", ") || "*"} FROM ${tableName}${whereClause ? ` WHERE ${whereClause}` : ""}`;
-    db.all(query, conditions, (err, rows) => {
+    
+    db.all(query, castObjectToQueryArgs(pureConditions), (err, rows) => {
         if (!err) resolve(rows);
         else reject(err);
     });
@@ -76,8 +82,8 @@ const updateCategory = (db, { categoryId, name, isActive }) =>
 const updateAccount = (db, { accountId, name, currency }) =>
     updateByIdBase(db, "main.Accounts", accountId, { name, currency });
 
-const getUsers = (db, { userId }) => 
-    selectBase(db, "main.Users", ["id", "name", "displayName"], { id: userId });
+const getUsers = (db, { userId, name, displayName }) => 
+    selectBase(db, "main.Users", ["id", "name", "displayName"], { id: userId, name, displayName });
 const getAccounts = (db, { accountId, currencyCode } = {}) => 
     selectBase(db, "main.Accounts", ["id", "name", "currencyCode"],  { id: accountId, currencyCode });
 const getCategories = (db, { categoryId, isActive } = {}) => {
