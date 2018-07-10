@@ -5,31 +5,47 @@ const { createUsers, createAccounts, createCategories, createTransactions } = re
 const castObjectToQueryArgs = input =>
     reduceObject(input, (acc, value, key) => Object.assign(acc, { [`$${key}`]: value }), {});
 
-const joinFields = (mapFn, input) => Object.keys(input).map(mapFn).join(", ");
-const joinUpdateFields = joinFields.bind(this, key => `${key} = $${key}`);
-const joinInsertFields = joinFields.bind(this, key => `$${key}`);
+const joinFields = (separator, mapFn, input) => Object.keys(input).filter(key => input[key]).map(mapFn).join(separator);
+const joinUpdateFields = joinFields.bind(this, ", ", key => `${key} = $${key}`);
+const joinInsertFields = joinFields.bind(this, ", ", key => `$${key}`);
+const joinWhereAndFields = joinFields.bind(this, " AND ", key => `${key} = $${key}`);
 
 const removeEmptyParams = input =>
     reduceObject(input, (acc, value, key) => value === undefined ? acc : Object.assign(acc, {[key]: value}), {});
 
-const updateBase = (db, tableName, id, fields) => new Promise((resolve, reject) => {
+const updateByIdBase = (db, tableName, id, values) => new Promise((resolve, reject) => {
     if (!id) return reject("No Id");
-    if (!hasNonEmptyInObject(fields)) return reject("Nothing to update");
+    if (!hasNonEmptyInObject(values)) return reject("Nothing to update");
 
-    const updateArgs = removeEmptyParams(fields);
+    const updateArgs = removeEmptyParams(values);
     const updateQuery = `UPDATE ${tableName} SET ${joinUpdateFields(updateArgs)} WHERE id = $id`;
 
     db.run(updateQuery, Object.assign({ $id: id }, castObjectToQueryArgs(updateArgs)), (err) => {
-        if (!err) resolve(id);
-        else reject(err);
+        if (err) return reject(err);
+        selectBase(db, tableName, [], { id }).then(rows => {
+            resolve(rows[0]);
+        });
     });
 });
-const insertBase = (db, tableName, fields) => new Promise((resolve, reject) => {
+const insertBase = (db, tableName, values) => new Promise((resolve, reject) => {
     const id = uuid();
-    const query = `INSERT INTO ${tableName} (id, ${Object.keys(fields).join(", ")}) VALUES ($id, ${joinInsertFields(fields)})`;
+    if (!hasNonEmptyInObject(values)) return reject("Nothing to insert");
+    const query = `INSERT INTO ${tableName} (id, ${Object.keys(values).join(", ")}) VALUES ($id, ${joinInsertFields(values)})`;
 
-    db.run(query, castObjectToQueryArgs(Object.assign({id}, fields)), (err) => {
-        if (!err) resolve(id);
+    db.run(query, castObjectToQueryArgs(Object.assign({ id }, values)), err => {
+        if (err) return reject(err);
+        selectBase(db, tableName, [], { id }).then(rows => {
+            resolve(rows[0]);
+        });
+    });
+});
+const selectBase = (db, tableName, fields = [], conditions = {}) => new Promise((resolve, reject) => {
+    const pureConditions = removeEmptyParams(conditions);
+    const whereClause = joinWhereAndFields(pureConditions);
+    const query = `SELECT ${fields.join(", ") || "*"} FROM ${tableName}${whereClause ? ` WHERE ${whereClause}` : ""}`;
+    
+    db.all(query, castObjectToQueryArgs(pureConditions), (err, rows) => {
+        if (!err) resolve(rows);
         else reject(err);
     });
 });
@@ -58,13 +74,27 @@ const addTransaction = (db, { userId, accountId, categoryId, amount, comment, da
     insertBase(db, "main.transactions", { userId, accountId, categoryId, amount, comment, date });
 
 const updateTransaction = (db, { transactionId, accountId, categoryId, amount, comment, date }) =>
-    updateBase(db, "main.Transaction", transactionId, {accountId, categoryId, amount, comment, date});
+    updateByIdBase(db, "main.Transaction", transactionId, {accountId, categoryId, amount, comment, date});
 const updateUser = (db, { userId, name, displayName }) =>
-    updateBase(db, "main.Users", userId, { name, displayName });
+    updateByIdBase(db, "main.Users", userId, { name, displayName });
 const updateCategory = (db, { categoryId, name, isActive }) =>
-    updateBase(db, "main.Categories", categoryId, { name, isActive });
+    updateByIdBase(db, "main.Categories", categoryId, { name, isActive });
 const updateAccount = (db, { accountId, name, currency }) =>
-    updateBase(db, "main.Accounts", accountId, { name, currency });
+    updateByIdBase(db, "main.Accounts", accountId, { name, currency });
+
+const getUsers = (db, { userId, name, displayName }) => 
+    selectBase(db, "main.Users", ["id", "name", "displayName"], { id: userId, name, displayName });
+const getAccounts = (db, { accountId, currencyCode } = {}) => 
+    selectBase(db, "main.Accounts", ["id", "name", "currencyCode"],  { id: accountId, currencyCode });
+const getCategories = (db, { categoryId, isActive } = {}) => {
+    const isActiveValue = typeof isActive === "boolean" ? {isActive: (isActive ? 1 : 0)} : {};
+    return selectBase(db, "main.Categories", ["id", "name", "isActive"], Object.assign({ id: categoryId }, isActiveValue));
+};
+// TODO: Filter by date
+const getTransactions = (db, {transactionId, categoryId, accountId, userId} = {}) => 
+    selectBase(db, "main.Transactions", ["id", "accountId", "categoryId", "userId", "amount", "comment", "date"], {
+        id: transactionId, categoryId, accountId, userId,
+    });
 
 module.exports = {
     create,
@@ -80,4 +110,10 @@ module.exports = {
         category: updateCategory,
         transaction: updateTransaction,
     },
+    get: {
+        users: getUsers,
+        accounts: getAccounts,
+        categories: getCategories,
+        transactions: getTransactions,
+    }
 };
