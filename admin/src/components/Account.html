@@ -1,0 +1,14 @@
+<span>{id}</span>
+<span>{name}</span>
+<span>{`${balance} ${currency}`}</span>
+
+<script>
+    export default {
+        computed: {
+            id: ({ data }) => data.id,
+            name: ({ data }) => data.name,
+            balance: ({ data }) => data.balance,
+            currency: ({ data }) => data.currencyCode,
+        }
+    }
+</script>

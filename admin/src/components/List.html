@@ -1,0 +1,27 @@
+<!--title, type and data -->
+<h3>{title}</h3>
+<ul>
+    {#each list as item (item.id)}
+    <li>
+        <svelte:component this={component} data={item}></svelte:component>
+    </li>
+    {/each}
+</ul>
+
+<script>
+    import Account from "./Account.html";
+    import ListItem from "./ListItem.html";
+
+    export default {
+        computed: {
+            component: ({ type }) => {
+                switch (type) {
+                    case "accounts":
+                        return Account;
+                    default:
+                        return ListItem;
+                }
+            }
+        }
+    }
+</script>

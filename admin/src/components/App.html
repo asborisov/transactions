@@ -1,0 +1,20 @@
+{#if accounts}
+    <List type="accounts" list={accounts} title="Accounts"></List>
+{/if}
+{#if users}
+    <List type="users" list={users} title="Users"></List>
+{/if}
+{#if categories}
+    <List type="categories" list={categories} title="Categories"></List>
+{/if}
+{#if transactions}
+    <List type="transactions" list={transactions} title="Transactions"></List>
+{/if}
+
+<script>
+    export default {
+        components: {
+            List: "./List.html",
+        }
+    }
+</script>

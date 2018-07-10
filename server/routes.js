@@ -1,3 +1,5 @@
+const path = require("path");
+const fs = require("fs");
 const db = require("./db");
 
 const methods = {
@@ -89,16 +91,16 @@ const map = new Map([
     [{path: "/categories", method: methods.GET}, getCategories],
     [{path: "/transactions", method: methods.GET}, getTransactions],
 
-    [{path: "/", method: methods.GET}, (db, request, response) => {
-        response.send('Hello');
+    [{path: "/admin/:file", method: methods.GET}, (db, request, response) => {
+        const publicFile = path.join(__dirname, "..", "admin", "public", request.params.file);
+        const distFile = path.join(__dirname, "..", "admin", "dist", request.params.file);
+        response.sendFile(fs.existsSync(publicFile) ? publicFile : distFile);
     }]
 ]);
 
 module.exports = {
     bindRoutes: (app, dbInstance) => {
-        map.forEach((value, key) =>
-            app[key.method](key.path, value.bind(this, dbInstance))
-        );
+        map.forEach((value, key) => app[key.method](key.path, value.bind(this, dbInstance)));
         return app;
     },
     methods,

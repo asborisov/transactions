@@ -1,0 +1,31 @@
+{
+  "name": "transactions-admin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "npm run build -- -w",
+    "clean": "npm run clean:dist && rimraf node_modules",
+    "clean:dist": "rimraf dist",
+    "lint": "eslint ./src/**"
+  },
+  "author": "aborisov@github.com",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^5.0.1",
+    "eslint-config-airbnb": "^17.0.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-jsx-a11y": "^6.1.0",
+    "eslint-plugin-react": "^7.10.0",
+    "rimraf": "^2.6.2",
+    "rollup": "^0.62.0",
+    "rollup-plugin-babel": "^3.0.7",
+    "rollup-plugin-eslint": "^4.0.0",
+    "rollup-plugin-svelte": "^4.2.1",
+    "rollup-watch": "^4.3.1",
+    "svelte": "^2.9.1"
+  }
+}
