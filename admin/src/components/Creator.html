@@ -1,10 +1,63 @@
 <div>
-
+    <select on:change="selectChanged(event)">
+    {#each options as op}
+        <option value="{op.value}" selected="{op.value === selected}">{op.text}</option>
+    {/each}
+    </select>
 </div>
+<form on:submit="send(event)">
+    <svelte:component this={component} data={item}></svelte:component>
+    {#if selected == "account"}
+        <input type="text" name="name" placeholder="Account name" />
+        <input type="text" maxlength="3" name="currencyCode" placeholder="Currency code" />    
+    {:else}
+        <label>{selected}</label>
+    {/if}
+    <br />
+    <input type="submit" value="Create" />
+</form>
 
 <script>
-    
-    export default {
+    import AccountCreator from "./AccountCreator.html";
 
+    const options = [
+        {text:"Account",value:"account"},
+        {text:"Category",value:"category"},
+        {text:"User",value:"user"},
+        {text:"Transaction",value:"transaction"},
+    ];
+    const getAccountComponent = type => {
+        switch (type) {
+            case "account":
+                return AccountCreator;
+        
+            default:
+                return null;
+        }
+    };
+    export default {
+        data() {
+            const defaultType = "account";
+            return {
+                selected: defaultType,
+                component: getAccountComponent(defaultType),
+            }
+        },
+        computed: {
+            options: ({ selected }) => options.map(o => ({...o, selected: o.value == selected})),
+        },
+        methods: {
+            selectChanged(e) {
+                this.set({
+                    selected: e.target.value,
+                    component: getAccountComponent(e.target.value),
+                });
+            },
+            send(event) {
+                event.preventDefault();
+                this.fire('submit', this.data);
+                console.log(this.options);
+            }
+        }
     }
 </script>

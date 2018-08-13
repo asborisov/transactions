@@ -1,3 +1,4 @@
+<Creator selected="category" on:submit="create()" />
 {#if accounts}
     <List type="accounts" list={accounts} title="Accounts"></List>
 {/if}
@@ -15,6 +16,12 @@
     export default {
         components: {
             List: "./List.html",
+            Creator: "./Creator.html",
+        },
+        methods: {
+            create() {
+                console.log('aaaa');
+            }
         }
     }
 </script>
